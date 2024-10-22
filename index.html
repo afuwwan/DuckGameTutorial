@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duck Game Tutorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #121212;
+            color: #ffffff;
+            padding-left: 15%;
+            padding-right: 15%;
+
+        }
+        .card {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            width: 100%;
+        }
+        h1, h2, h3 {
+            color: #ffffff;
+        }
+        a {
+            color: #1e90ff;
+        }
+        code {
+            background-color: #333333;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #ffffff;
+        }
+        pre {
+            background-color: #333333;
+            padding: 10px;
+            border-left: 3px solid #1e90ff;
+            overflow-x: auto;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1 id="membuat-endless-running-game-duck-game-dengan-c-">Membuat Endless Running Game “Duck Game” dengan C++</h1>
+<h2 id="catatan">Catatan</h2>
+<ul>
+<li><p>Harap menggunakan Microsoft Visual Studio latest version</p>
+</li>
+<li><p>Menggunakan Windows OS</p>
+</li>
+<li><p>Menggunakan Game Engine dari repository berikut : <a href="https://github.com/eriqadams/pixlupengine">https://github.com/eriqadams/pixlupengine</a></p>
+</li>
+<li><p>Hasil Final Implementasi dapat dilihat pada repository berikut : <a href="https://github.com/afuwwan/Game-Course">https://github.com/afuwwan/Game-Course</a> </p>
+</li>
+<li><p>Library yang digunakan pada Game Engine adalah freetype, OpenGL, SDL, dan SOIL</p>
+</li>
+</ul>
+<h2 id="deskripsi">Deskripsi</h2>
+<h3 id="awalan">Awalan</h3>
+<p>Pembuatan Game dengan tema endless running berdasarkan game endless running yang terdapat pada google yaitu dino run game saat user tidak terhubung ke jaringan internet. Sebelum masuk ke dalam tahap pengembangan perlu kita ketahui fitur2 apa saja yang ada dalam game tersebut. </p>
+<h3 id="fitur-utama-dino-run-">Fitur Utama Dino Run :</h3>
+<ul>
+<li>Render Sprite</li>
+<li>Menggerakkan Dino (Jump) </li>
+<li>Spawn Cactus dari Kanan ke Kiri </li>
+<li>Deteksi tabrakan dino dan cactus </li>
+<li>Hitung score render score text </li>
+<li>Parallax scrolling </li>
+<li>Restart game</li>
+</ul>
+<p>Di atas adalah fitur-fitur utama yang terdapat pada game Dino Run. Pada percobaan kali ini, kita juga akan menambahkan fitur <strong>Menu Screen</strong> dan <strong>In-Game Screen</strong> untuk membantu memahami cara implementasi game yang memiliki screen berbeda. </p>
+<h3 id="tahapan-pembuatan-">Tahapan Pembuatan :</h3>
+<p>Pembuatan game akan dibagi menjadi 3 tahapan utama dan beberapa sub-tahapan pada proses implementasi.</p>
+<h2 id="tahap-1-setup-lingkungan-pengembangan">Tahap 1: Setup Lingkungan Pengembangan</h2>
+<ul>
+<li><p>Install Visual Studio</p>
+</li>
+<li><p>Clone <strong>Pixlup Engine</strong> dari repository Github.</p>
+<pre><code class="lang-bash">git <span class="hljs-keyword">clone</span> <span class="hljs-title">https</span>://github.com/eriqadams/pixlupengine.git
+</code></pre>
+</li>
+<li>Buka file <strong>project.sln</strong> pada folder <strong>pixlupengine/vs</strong></li>
+<li>Sekarang anda sudah masuk kedalam game engine silahkan masuk ke tahap ke 2</li>
+</ul>
+<h2 id="tahap-2-modifikasi-mainmenuscreen-dan-menambahkan-class-dinoreal">Tahap 2: Modifikasi MainMenuScreen, dan menambahkan Class DinoReal</h2>
+<p>Disini DinoReal digunakan sebagai screen manager yang berfungsi untuk menghubungkan kedua screen menu dan game.</p>
+<h3 id="mainmenuscreen-cpp">MainMenuScreen.cpp</h3>
+<p>Pada Game Engine yang digunakan untuk mengembangkan game Endless Running ini, terdapat template implementasi layar yang dapat kita manfaatkan untuk menambahkan fitur screen pada game yang akan kita buat. Pada pengebangan ini kita akan memodifikasi untuk menyesuaikan dengan kebutuhan. Modifikasi pada layar MainMenuScreen berupa penambahan sprite Background dan penghubungannya ke screen manager yaitu <strong>DinoReal.cpp</strong>.</p>
+<pre><code class="lang-bash"><span class="hljs-comment">#include "MainMenuScreen.h"</span>
+
+Engine::MainMenuScreen::MainMenuScreen()
+{
+    text = <span class="hljs-keyword">NULL</span>;
+}
+
+void Engine::MainMenuScreen::Init()
+{
+
+    Texture* bgTexture = <span class="hljs-keyword">new</span> Texture(<span class="hljs-string">"senja.png"</span>);<span class="hljs-comment">//</span>
+    backgroundSprite = (<span class="hljs-keyword">new</span> Sprite(bgTexture, game-&gt;GetDefaultSpriteShader(), game-&gt;GetDefaultQuad()))-&gt;SetSize((<span class="hljs-keyword">float</span>)game-&gt;GetSettings()-&gt;screenWidth, (<span class="hljs-keyword">float</span>)game-&gt;GetSettings()-&gt;screenHeight);
+
+
+    <span class="hljs-comment">// Create a Texture</span>
+    Texture* texture = <span class="hljs-keyword">new</span> Texture(<span class="hljs-string">"buttons.png"</span>);
+
+    <span class="hljs-comment">// Create Sprites</span>
+    Sprite* playSprite = (<span class="hljs-keyword">new</span> Sprite(texture, game-&gt;GetDefaultSpriteShader(), game-&gt;GetDefaultQuad()))
+        -&gt;SetNumXFrames(<span class="hljs-number">6</span>)
+        -&gt;SetNumYFrames(<span class="hljs-number">1</span>)
+        -&gt;AddAnimation(<span class="hljs-string">"normal"</span>, <span class="hljs-number">5</span>, <span class="hljs-number">5</span>)
+        -&gt;AddAnimation(<span class="hljs-string">"hover"</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>)
+        -&gt;AddAnimation(<span class="hljs-string">"press"</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>)
+        -&gt;SetAnimationDuration(<span class="hljs-number">400</span>);
+
+    Sprite* exitSprite = (<span class="hljs-keyword">new</span> Sprite(texture, game-&gt;GetDefaultSpriteShader(), game-&gt;GetDefaultQuad()))
+        -&gt;SetNumXFrames(<span class="hljs-number">6</span>)
+        -&gt;SetNumYFrames(<span class="hljs-number">1</span>)
+        -&gt;AddAnimation(<span class="hljs-string">"normal"</span>, <span class="hljs-number">2</span>, <span class="hljs-number">2</span>)
+        -&gt;AddAnimation(<span class="hljs-string">"hover"</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)
+        -&gt;AddAnimation(<span class="hljs-string">"press"</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)
+        -&gt;SetAnimationDuration(<span class="hljs-number">400</span>);
+
+    <span class="hljs-comment">//Create Buttons</span>
+    Button* playButton = <span class="hljs-keyword">new</span> Button(playSprite, <span class="hljs-string">"play"</span>);
+    playButton-&gt;SetPosition((game-&gt;GetSettings()-&gt;screenWidth / <span class="hljs-number">2</span>) - (playSprite-&gt;GetScaleWidth() / <span class="hljs-number">2</span>),
+        <span class="hljs-number">400</span>);
+    buttons.push_back(playButton);
+
+    Button* exitButton = <span class="hljs-keyword">new</span> Button(exitSprite, <span class="hljs-string">"exit"</span>);
+    exitButton-&gt;SetPosition((game-&gt;GetSettings()-&gt;screenWidth / <span class="hljs-number">2</span>) - (exitSprite-&gt;GetScaleWidth() / <span class="hljs-number">2</span>),
+        <span class="hljs-number">250</span>);
+    buttons.push_back(exitButton);
+
+    <span class="hljs-comment">// Set play button into active button</span>
+    currentButtonIndex = <span class="hljs-number">0</span>;
+    buttons[currentButtonIndex]-&gt;SetButtonState(Engine::ButtonState::HOVER);
+
+    <span class="hljs-comment">// Create Text</span>
+    text = (<span class="hljs-keyword">new</span> Text(<span class="hljs-string">"8-bit Arcade In.ttf"</span>, <span class="hljs-number">100</span>, game-&gt;GetDefaultTextShader()))
+        -&gt;SetText(<span class="hljs-string">"DUCK ON A CART"</span>)-&gt;SetPosition(game-&gt;GetSettings()-&gt;screenWidth * <span class="hljs-number">0.5</span>f - <span class="hljs-number">300</span>, game-&gt;GetSettings()-&gt;screenHeight - <span class="hljs-number">100.0</span>f)-&gt;SetColor(<span class="hljs-number">255</span>, <span class="hljs-number">255</span>, <span class="hljs-number">255</span>);
+
+    <span class="hljs-comment">// Add input mappings</span>
+    game-&gt;GetInputManager()-&gt;AddInputMapping(<span class="hljs-string">"next"</span>, SDLK_DOWN)
+        -&gt;AddInputMapping(<span class="hljs-string">"prev"</span>, SDLK_UP)
+        -&gt;AddInputMapping(<span class="hljs-string">"press"</span>, SDLK_RETURN);
+
+    music2 = (<span class="hljs-keyword">new</span> Music(<span class="hljs-string">"2021-08-16_-_8_Bit_Adventure_-_www.FesliyanStudios.com.ogg"</span>))-&gt;SetVolume(<span class="hljs-number">30</span>)-&gt;Play(<span class="hljs-keyword">true</span>);
+
+}
+
+void Engine::MainMenuScreen::Update()
+{
+
+    <span class="hljs-comment">// Set background</span>
+    game-&gt;SetBackgroundColor(<span class="hljs-number">52</span>, <span class="hljs-number">155</span>, <span class="hljs-number">235</span>);
+
+    <span class="hljs-comment">//Debug</span>
+    <span class="hljs-keyword">if</span> (music2-&gt;IsPlaying() == <span class="hljs-keyword">true</span>)
+    {
+        std::cout &lt;&lt; <span class="hljs-string">"music 2 is playing"</span> &lt;&lt; std::endl;
+    }
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (music2-&gt;IsPlaying() == <span class="hljs-keyword">false</span>)
+    {
+        std::cout &lt;&lt; <span class="hljs-string">"music 2 is not playing"</span> &lt;&lt; std::endl;
+    }
+
+    <span class="hljs-comment">//Button States</span>
+    <span class="hljs-keyword">if</span> (game-&gt;GetInputManager()-&gt;IsKeyReleased(<span class="hljs-string">"next"</span>)) {
+        <span class="hljs-comment">// Set previous button to normal state</span>
+        buttons[currentButtonIndex]-&gt;SetButtonState(Engine::ButtonState::NORMAL);
+        <span class="hljs-comment">// Next Button</span>
+        currentButtonIndex = (currentButtonIndex &lt; (<span class="hljs-keyword">int</span>)buttons.size() - <span class="hljs-number">1</span>) ? currentButtonIndex + <span class="hljs-number">1</span> : currentButtonIndex;
+        <span class="hljs-comment">// Set current button to hover state</span>
+        buttons[currentButtonIndex]-&gt;SetButtonState(Engine::ButtonState::HOVER);
+    }
+
+    <span class="hljs-keyword">if</span> (game-&gt;GetInputManager()-&gt;IsKeyReleased(<span class="hljs-string">"prev"</span>)) {
+        <span class="hljs-comment">// Set previous button to normal state</span>
+        buttons[currentButtonIndex]-&gt;SetButtonState(Engine::ButtonState::NORMAL);
+        <span class="hljs-comment">// Prev Button</span>
+        currentButtonIndex = currentButtonIndex &gt; <span class="hljs-number">0</span> ? currentButtonIndex - <span class="hljs-number">1</span> : currentButtonIndex;
+        <span class="hljs-comment">// Set current button to hover state</span>
+        buttons[currentButtonIndex]-&gt;SetButtonState(Engine::ButtonState::HOVER);
+    }
+
+    <span class="hljs-keyword">if</span> (game-&gt;GetInputManager()-&gt;IsKeyReleased(<span class="hljs-string">"press"</span>)) {
+        <span class="hljs-comment">// Set current button to press state</span>
+        Button* b = buttons[currentButtonIndex];
+        b-&gt;SetButtonState(Engine::ButtonState::PRESS);
+        <span class="hljs-comment">// If play button then go to InGame, exit button then exit</span>
+        <span class="hljs-keyword">if</span> (<span class="hljs-string">"play"</span> == b-&gt;GetButtonName()) {
+            ScreenManager::GetInstance(game)-&gt;SetCurrentScreen(<span class="hljs-string">"ingame"</span>);
+            music2-&gt;Stop();
+        }
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-string">"exit"</span> == b-&gt;GetButtonName()) {
+            game-&gt;SetState(Engine::State::EXIT);
+        }
+    }
+
+    <span class="hljs-comment">// Update All buttons</span>
+    <span class="hljs-keyword">for</span> (Button* b : buttons) {
+        b-&gt;Update(game-&gt;GetGameTime());
+    }
+
+}
+
+void Engine::MainMenuScreen::Draw()
+{
+
+    backgroundSprite-&gt;Draw();
+
+    <span class="hljs-comment">// Render all buttons</span>
+    <span class="hljs-keyword">for</span> (Button* b : buttons) {
+        b-&gt;Draw();
+    }
+    <span class="hljs-comment">// Render title </span>
+    text-&gt;Draw();
+}
+</code></pre>
+<h3 id="mainmenuscreen-h">MainMenuScreen.h</h3>
+<p>Pada <strong>file MainMenuScreen.h</strong> berfungsi untuk melakukan inisialisasi fungsi - fungsi <strong>Game Loop</strong> yaitu fungsi <strong>Init()</strong>, <strong>Update()</strong>, dan <strong>Draw()</strong> serta inisialisasi variabel - variabel Sprite<em> backGroundSprite untuk latar belakang visual, vector&lt;Button</em>&gt; untuk menyimpan tombol - tombol pada menu, Text<em> text untuk menampilkan teks dan dua variabel Music</em> music dan Music<em> music2 yang akan digunakan dalam <em>*MainMenuScreen.cpp</em></em>. </p>
+<pre><code class="lang-bash"><span class="hljs-meta">#<span class="hljs-meta-keyword">ifndef</span> MAINMENUSCREEN_H</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> MAINMENUSCREEN_H</span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Screen.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Game.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Setting.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Texture.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Sprite.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Button.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Text.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Music.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;vector&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ScreenManager.h"</span></span>
+
+<span class="hljs-keyword">namespace</span> Engine {
+    <span class="hljs-keyword">class</span> MainMenuScreen :
+        <span class="hljs-keyword">public</span> Engine::Screen
+    {
+    <span class="hljs-keyword">public</span>:
+        MainMenuScreen();
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Init</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Update</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Draw</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-keyword">private</span>:
+    <span class="hljs-built_in">vector</span>&lt;Button*&gt; buttons;
+    Text* text;
+    <span class="hljs-keyword">int</span> currentButtonIndex = <span class="hljs-number">0</span>;
+
+    Engine::Sprite* backgroundSprite = <span class="hljs-literal">NULL</span>;
+    Music* music = <span class="hljs-literal">NULL</span>;
+    Music* music2 = <span class="hljs-literal">NULL</span>;
+
+    };
+}
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
+</code></pre>
+<h3 id="ingamescreen-cpp">InGameScreen.cpp</h3>
+<p>Pada file InGameScreen.cpp kita modifikasi dengan menghilangkan logika yang terdapat di dalam tiap fungsi untuk kita tambahkan logika-logika baru untuk menerapkan game Endless Running.</p>
+<pre><code class="lang-bash"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"InGameScreen.h"</span></span>
+
+Engine::InGameScreen::InGameScreen() 
+{
+}
+
+<span class="hljs-keyword">void</span> Engine::InGameScreen::Init()
+{
+}
+
+<span class="hljs-keyword">void</span> Engine::InGameScreen::Update()
+{
+}
+
+<span class="hljs-keyword">void</span> Engine::InGameScreen::Draw()
+{
+}
+</code></pre>
+<h3 id="ingamescreen-h">InGameScreen.h</h3>
+<p>File <strong>InGameScreen.h</strong> berfungsi sebagai header file untuk mendeklarasikan kelas <strong>InGameScreen</strong> dalam namespace <strong>Engine</strong>. Kelas ini mewarisi dari kelas <strong>Screen</strong> dan berperan dalam mengelola tampilan layar permainan (game screen) di dalam aplikasi. File ini mendefinisikan konstruktor serta tiga fungsi utama, yaitu <strong>Init()</strong>, <strong>Update()</strong>, dan <strong>Draw()</strong>, yang digunakan untuk menginisialisasi layar, memperbarui status permainan, dan menggambar elemen-elemen di layar yang akan diimplementasikan pada file InGameScreen.cpp. </p>
+<pre><code class="lang-bash"><span class="hljs-meta">#<span class="hljs-meta-keyword">ifndef</span> INGAMESCREEN_H</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> INGAMESCREEN_H</span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Screen.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Turtle.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ScreenManager.h"</span></span>
+
+<span class="hljs-keyword">namespace</span> Engine {
+    <span class="hljs-keyword">class</span> InGameScreen :
+        <span class="hljs-keyword">public</span> Engine::Screen
+    {
+    <span class="hljs-keyword">public</span>:
+        InGameScreen();
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Init</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Update</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Draw</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-keyword">private</span>:
+
+    };
+}
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
+</code></pre>
+<h3 id="dinoreal-cpp">DinoReal.cpp</h3>
+<p>Kelas DinoReal pada DinoReal.cpp digunakan untuk menginisialisasi dan mengatur alur jalannya permainan pada, termasuk mengelola layar-layar yang berbeda dalam game seperti layar utama (Main Menu) dan layar permainan (In-Game).</p>
+<p>Konstruktor DinoReal(Setting* setting)
+Melakukan inisialisasi objek game dengan title “DinoReal-Game” yang dimana menggunakan parameter setting yang merujuk ke kelas induk Engine::Game.
+Update()
+Fungsi ini memanggil metode Update() dari ScreenManager, yang fungsinya memperbarui status layar saat ini. Setiap perubahan yang terjadi di layar akan melalui Update() untuk diperbarui.
+Render()
+Fungsi ini memanggil metode Draw() dari ScreenManager, yang fungsinya menggambar elemen-elemen visual dari layar ke jendela game.</p>
+<pre><code class="lang-bash"><span class="hljs-comment">#include "DinoReal.h"</span>
+
+<span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:DinoReal</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:DinoReal</span>(Setting* setting) <span class="hljs-symbol">:Engine</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Game</span>(setting)
+{
+    setting-&gt;windowTitle = <span class="hljs-string">"DinoReal-Game"</span>;
+}
+
+<span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:DinoReal</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:~DinoReal</span>()
+{
+
+}
+
+void <span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:DinoReal</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Init</span>()
+{
+    <span class="hljs-regexp">//music</span> = (new Music(<span class="hljs-string">"Rosolanc.ogg"</span>))-&gt;SetVolume(<span class="hljs-number">70</span>)-&gt;Play(<span class="hljs-keyword">true</span>);
+    inputManager-&gt;AddInputMapping(<span class="hljs-string">"prev"</span>, SDLK_UP)
+        -&gt;AddInputMapping(<span class="hljs-string">"next"</span>, SDLK_DOWN)
+        -&gt;AddInputMapping(<span class="hljs-string">"press"</span>, SDLK_RETURN);
+
+<span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:ScreenManager</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:GetInstance</span>(this)-&gt;AddScreen(<span class="hljs-string">"ingame"</span>, new InGameScreen())
+        -&gt;AddScreen(<span class="hljs-string">"mainmenu"</span>, new MainMenuScreen())
+        -&gt;SetCurrentScreen(<span class="hljs-string">"mainmenu"</span>);
+
+}
+
+void <span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:DinoReal</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Update</span>()
+{
+    <span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:ScreenManager</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:GetInstance</span>(this)-&gt;Update();
+
+}
+
+void <span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:DinoReal</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:Render</span>()
+{
+    <span class="hljs-symbol">Engine:</span><span class="hljs-symbol">:ScreenManager</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:GetInstance</span>(this)-&gt;Draw();
+}
+</code></pre>
+<h3 id="dinoreal-h">DinoReal.h</h3>
+<p><strong>DinoReal.h</strong> kita gunakan untuk menginisiasikan variabel yang kita gunakan pada file <strong>DinoReal.cpp</strong>. <strong>DinoReal.h</strong> juga menerapkan inheritance dari beberapa file seperti <strong>Game.h</strong>, <strong>Setting.h</strong>, <strong>Texture.h</strong>, <strong>Sprite.h</strong>, <strong>Music.h</strong> dan <strong>Sound.h</strong>.</p>
+<pre><code class="lang-bash"><span class="hljs-meta">#<span class="hljs-meta-keyword">ifndef</span> DINOREAL_H</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> DINOREAL_H</span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Game.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Setting.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Texture.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Sprite.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Music.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Sound.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Text.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Input.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;vector&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;chrono&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;iostream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;SDL/SDL.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"Screen.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"ScreenManager.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-string">"InGameScreen.h"</span></span>
+
+
+namespace <span class="hljs-class">Engine </span>{
+    class DinoReal :
+        public <span class="hljs-symbol">Engine::</span>Game
+    {
+<span class="hljs-symbol">    public:</span>
+        DinoReal(Setting* setting);
+        ~DinoReal();
+        virtual void Init();
+        virtual void Update();
+        virtual void Render();
+<span class="hljs-symbol">    private:</span>
+
+    };
+}
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
+</code></pre>
+<h2 id="tahap-3-implementasi-game-endless-running-duck-game-">Tahap 3: Implementasi Game Endless Running <strong>&quot;Duck Game&quot;</strong></h2>
+<p>Pada tahap ini kita akan menerapkan fitur-fitur yang dibutuhkan untuk membuat endless running game pada &quot;Duck Game&quot; yang ingin kita kembangkan.</p>
+<h3 id="1-merender-sprite">1. Merender Sprite</h3>
+<p>Tahap ini menginisiasi file gambar “duck.png” dan mengatur animasinya di dalam permainan.
+<strong>texture</strong> membuat object texture dengan mengambil file gambar “duck.png”, kemudian <strong>sprite</strong> membuat sistem sprite dari gambar “duck.png”, kemudian <strong>sprite</strong> membuat sistem sprite dari objek texture yang ada. Pengaturan frame dapat diatur:</p>
+<ul>
+<li>SetNumXFrames(3) mengatur bahwa sprite terdiri dari 3 frame dalam arah horizontal.</li>
+<li>SetNumYFrames(1) mengatur bahwa sprite hanya memiliki 1 frame dalam arah vertikal.</li>
+</ul>
+<p>Penambahan animasi pada sprite dengan melakukan pengaturan frame dan durasi yang diinginkan. Seperti disini animasi <strong>walk</strong> menggunakan frame 0 sampai 2 sedangkan animasi <strong>float</strong> hanya menggunakan frame 1.</p>
+<p>Selain itu sprite bisa diatur konfigurasinya seperti skala ukuran (SetScale), durasi animasi (SetAnimationDuration), posisi sprite (SetPosition), dan kotak pembatas (SetBoundingSize).</p>
+<pre><code class="lang-bash">
+    texture = <span class="hljs-keyword">new</span> Texture(<span class="hljs-string">"duck.png"</span>);
+    sprite = <span class="hljs-keyword">new</span> Sprite(texture, game-&gt;GetDefaultSpriteShader(),game-&gt;GetDefaultQuad());
+    sprite-&gt;SetNumXFrames<span class="hljs-function"><span class="hljs-params">(<span class="hljs-number">3</span>)</span>
+        -&gt;</span>SetNumYFrames<span class="hljs-function"><span class="hljs-params">(<span class="hljs-number">1</span>)</span>
+        -&gt;</span>AddAnimation<span class="hljs-function"><span class="hljs-params">(<span class="hljs-string">"walk"</span>, <span class="hljs-number">0</span>, <span class="hljs-number">2</span>)</span>
+        -&gt;</span>AddAnimation<span class="hljs-function"><span class="hljs-params">(<span class="hljs-string">"float"</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>)</span>
+        -&gt;</span>SetScale<span class="hljs-function"><span class="hljs-params">(<span class="hljs-number">5</span>)</span>
+        -&gt;</span>SetAnimationDuration<span class="hljs-function"><span class="hljs-params">(<span class="hljs-number">100</span>)</span>
+        -&gt;</span>SetPosition<span class="hljs-function"><span class="hljs-params">(<span class="hljs-number">50</span>, <span class="hljs-number">100</span>)</span>
+        -&gt;</span>SetBoundingBoxSize(<span class="hljs-number">150</span>, <span class="hljs-number">100</span>);
+</code></pre>
+<h3 id="2-menggerakkan-duck-untuk-jump">2. Menggerakkan Duck untuk Jump</h3>
+<p>Pada tahap ini kita mengimplementasikan mekanik agar karakter dapat melompat menggunakan percabangan dimana ketika keadaan <strong>IsKeyPressed(“Jump”)</strong> bernilai <strong>true</strong> dan sedang tidak dalam keadaan jump <strong>(!jump)</strong> bernilai <strong>true</strong> maka akan masuk ke dalam percabangan dan  </p>
+<pre><code class="lang-bash">    <span class="hljs-comment">//Jump mechanic</span>
+    <span class="hljs-function"><span class="hljs-title">if</span> (game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etInputManager</span>()-&gt;</span>IsKeyPressed(<span class="hljs-string">"Jump"</span>) &amp;&amp; !jump) {
+        <span class="hljs-comment">//Set gravity and yVelocity</span>
+        <span class="hljs-function"><span class="hljs-title">float</span> ratio = (game-&gt;</span>GetGameTime() / <span class="hljs-number">16.7</span>f);
+        <span class="hljs-comment">//gravity = 0.16f * ratio;</span>
+        gravity = <span class="hljs-number">0.075</span>f * ratio;
+        yVelocity = <span class="hljs-number">1.8</span>f;
+        jump = <span class="hljs-literal">true</span>;
+        <span class="hljs-function"><span class="hljs-title">sound</span>-&gt;</span>Play(<span class="hljs-literal">false</span>);
+        <span class="hljs-function"><span class="hljs-title">sprite</span>-&gt;</span>PlayAnim(<span class="hljs-string">"float"</span>);
+    }
+</code></pre>
+<h3 id="3-deteksi-tabrakan-duck-dan-obstacle">3. Deteksi tabrakan Duck dan Obstacle</h3>
+<p>Tahap ini dilakukan deteksi tabrakan yang terjadi antara karakter bebek (duck) dengan objek (obstacle). Ketika karakter bertabrakan dengan obstacle, permainan akan beralih ke keadaan game over.</p>
+<p>Dilakukan looping for (Sprite<em> s : platform) untuk melakukan cek apakah objek (obstacle) bertabrakan dengan bebek (duck).
+Pendeteksian tabrakan menggunakan logika <strong>if (s-&gt;GetBoundingBox()-&gt;CollideWith(sprite-&gt;GetBoundingBox()))</strong> dimana jika bernilai <em>*true</em></em> maka akan menampilkan status game over (GAME_OVER).</p>
+<pre><code class="lang-bash">    <span class="hljs-comment">// when sprite hit an obstacle the sate switch to game over</span>
+    <span class="hljs-keyword">for</span> (Sprite* s : platforms) {
+        <span class="hljs-function"><span class="hljs-title">if</span> (s-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etBoundingBox</span>()-&gt;</span>C<span class="hljs-function"><span class="hljs-title">ollideWith</span>(sprite-&gt;</span>GetBoundingBox())) {
+
+            <span class="hljs-function"><span class="hljs-title">deathSound</span>-&gt;</span>Play(<span class="hljs-literal">false</span>);
+            <span class="hljs-function"><span class="hljs-title">deathSound</span>-&gt;</span>IsPlaying() == <span class="hljs-literal">false</span>;
+            gstate = GameState::GAME_OVER;
+            return;
+        }
+    }
+</code></pre>
+<h3 id="4-spawn-obstacle-kanan-ke-kiri">4. Spawn Obstacle kanan ke kiri</h3>
+<p>Pada tahap ini dilakukan spawn obstacle dari kanan ke kiri dengan kecepatan yang bertambah seiring waktu (GameTime) atau berdasarkan skor.</p>
+<p>Looping pada obstacle
+for (Sprite* s : platforms) </p>
+<p>Penentuan posisi awal dari sprite obstacle menggunakan variabel “x<em>” (horizontal), “y</em>” (vertikal), dan float velocity (kecepatan gerak obstacle)</p>
+<p>Penambahan kecepatan obstacle berdasarkan skor dengan menggunakan variabel increment dengan range yang menghasilkan logika rumus: “velocity = baseVelocity + (range * increment)”.</p>
+<p>Menggerakkan obstacle dihitung dengan menggunakan waktu permainan dengan method GetGameTime() yang dikalikan dengan kecepatan <strong>x_ -= velocity * game-&gt;GetGameTime()</strong> (tanda “-” digunakan untuk menandakan obstacle bergerak dari kanan ke kiri.</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">for</span> (Sprite* s : platforms)
+{
+
+    <span class="hljs-keyword">float</span> x_ = s-&gt;GetPosition().x;
+    <span class="hljs-keyword">float</span> y_ = <span class="hljs-number">198</span>;
+    <span class="hljs-keyword">float</span> velocity;
+
+    <span class="hljs-comment">//every 10 seconds obstacle speeds up by 0.1f</span>
+    <span class="hljs-keyword">float</span> baseVelocity = <span class="hljs-number">0.7f</span>; <span class="hljs-comment">//nilai awal kecepatan</span>
+    <span class="hljs-keyword">float</span> increment = <span class="hljs-number">0.1f</span>; <span class="hljs-comment">// nilai untuk increment kecepatan tiap kelipatan 10 pada score</span>
+
+    <span class="hljs-comment">//nilai untuk menetukan tiap kelipatan berapa nilai velocity bertambah</span>
+    <span class="hljs-keyword">int</span> range = score / <span class="hljs-number">10</span>; <span class="hljs-comment">//nilai integer = 0 jika menghasilkan nilai float</span>
+
+    velocity = baseVelocity + (range * increment);               
+    <span class="hljs-comment">//kecepatan = nilai awal kecepatan + (nilai score tiap kelipatan 10 * nilai increment)</span>
+
+    <span class="hljs-comment">// Apply velocity changes</span>
+    x_ -= velocity * game-&gt;GetGameTime();
+
+    <span class="hljs-comment">// makes parallax speed based on velocity</span>
+    MoveLayer(front, velocity);
+
+    <span class="hljs-comment">//Debug</span>
+    <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Speed : "</span> &lt;&lt; velocity &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+
+    s-&gt;SetFlipHorizontal(<span class="hljs-literal">true</span>)
+    -&gt;SetPosition(x_, y_)-&gt;Update(game-&gt;GetGameTime());
+
+    <span class="hljs-comment">//Debug</span>
+    <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"The Value of x_ is : "</span> &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+    <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; to_string(x) &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+
+
+    <span class="hljs-comment">//Relocate obstacle position when its out of viewport</span>
+    <span class="hljs-keyword">if</span> (x_ &lt;= <span class="hljs-number">-200</span>)
+    {
+        s-&gt;SetPosition(<span class="hljs-number">2000</span>, <span class="hljs-number">198</span>);
+    }
+}
+</code></pre>
+<h3 id="5-dino-tidak-bisa-bergerak-ke-kiri-melewati-batas-viewport">5. Dino tidak bisa bergerak ke kiri melewati batas viewport</h3>
+<p>Pada tahap ini memodifikasi dimana ketika Duck melewati batas viewport dimana posisi  Duck pada sumbu x kurang dari 0 maka posisi Duck akan diatur menjadi 0 dan posisi sprite Duck akan diperbarui dengan x bernilai 0.</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">if</span> (x &lt;= <span class="hljs-number">0</span>)
+{
+x = <span class="hljs-number">0</span>;
+<span class="hljs-function"><span class="hljs-title">sprite</span>-&gt;</span>SetPosition(x, y);
+}
+</code></pre>
+<h3 id="6-game-semakin-cepat-semakin-lama-game-berjalan">6. Game semakin cepat semakin lama game berjalan</h3>
+<p>Pada tahap ini kita melakukan modifikasi dimana ketika game akan semakin cepat. Modifikasi ini akan diterapkan setiap kelipatan 10 dari skor yang diperoleh dimana kecepatan awal sebesar 0.7f akan ditambah dengan 0.1f begitu juga untuk parallax scrolling yang disesuaikan dengan kecepatan yang seiring waktu bertambah.</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">float</span> x_ = s-&gt;GetPosition().x;
+<span class="hljs-keyword">float</span> y_ = <span class="hljs-number">198</span>;
+<span class="hljs-keyword">float</span> velocity;
+
+<span class="hljs-comment">//every 10 seconds obstacle speeds up by 0.1f</span>
+<span class="hljs-keyword">float</span> baseVelocity = <span class="hljs-number">0.7f</span>; <span class="hljs-comment">//nilai awal kecepatan</span>
+<span class="hljs-keyword">float</span> increment = <span class="hljs-number">0.1f</span>; <span class="hljs-comment">// nilai untuk increment kecepatan tiap kelipatan 10 pada score</span>
+
+<span class="hljs-comment">//nilai untuk menetukan tiap kelipatan berapa nilai velocity bertambah</span>
+<span class="hljs-keyword">int</span> range = score / <span class="hljs-number">10</span>; <span class="hljs-comment">//nilai integer = 0 jika menghasilkan nilai float</span>
+
+velocity = baseVelocity + (range * increment);               
+<span class="hljs-comment">//kecepatan = nilai awal kecepatan + (nilai score tiap kelipatan 10 * nilai increment)</span>
+
+<span class="hljs-comment">// Apply velocity changes</span>
+x_ -= velocity * game-&gt;GetGameTime();
+
+<span class="hljs-comment">// makes parallax speed based on velocity</span>
+MoveLayer(front, velocity);
+
+<span class="hljs-comment">//Debug</span>
+<span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Speed : "</span> &lt;&lt; velocity &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+</code></pre>
+<h3 id="7-hitung-score-dan-render-score-text">7. Hitung Score dan Render score text</h3>
+<p>Implementasi fitur score pada game ini dilakukan dengan menyesuaikan lama player bertahan hidup selama game berlangsung. Kita menginisiasikan variable “currentTime” untuk mengukur waktu yang sudah berlalu selama game berlangsung. Karena “SDL_GetTicks() tidak menghasilkan satuan detik maka pada logika if kita akan menambahkan nilai score sebanyak 1 setiap nilai currentTime melebihi 1000. </p>
+<pre><code class="lang-bash">
+    Uint32 currentTime = SDL_GetTicks();
+
+    <span class="hljs-comment">//debugging</span>
+    <span class="hljs-comment">//std::cout &lt;&lt; "Current time: " &lt;&lt; currentTime &lt;&lt; std::endl;</span>
+
+    <span class="hljs-comment">// If 1000 milliseconds (1 second) have passed, increment the score</span>
+    <span class="hljs-keyword">if</span> (currentTime - lastTime &gt;= <span class="hljs-number">1000</span>) {
+        <span class="hljs-built_in">score</span> += <span class="hljs-number">1</span>;
+        lastTime = currentTime;
+    }
+
+    <span class="hljs-comment">// Update the score text display</span>
+    <span class="hljs-built_in">text</span>-&gt;<span class="hljs-built_in">SetText</span>(<span class="hljs-string">"Score: "</span> + std::to_string(<span class="hljs-built_in">score</span>))
+          -&gt;<span class="hljs-built_in">SetPosition</span>(<span class="hljs-number">1450</span>, <span class="hljs-number">850</span>);
+</code></pre>
+<h3 id="8-parallax-scrolling">8. Parallax scrolling</h3>
+<p>Parallax scrolling adalah teknik di mana layer latar belakang bergerak dengan kecepatan yang berbeda dibandingkan dengan objek di layar depan sehingga menciptakan ilusi objek bergerak.</p>
+<p>Fungsi Utama:
+MoveLayer: Menggerakkan layer background secara horizontal, menggesernya sesuai dengan kecepatan yang diinginkan, dan melakukan respawn sprite sehingga latar belakang terlihat terus bergerak.
+DrawLayer: Menggambar sprite dalam layer setiap frame.
+AddToLayer: Menambahkan sprite baru ke dalam layer background dengan ukuran layar penuh dan mengatur dua sprite agar berjalan secara bersamaan dan kontinu.</p>
+<pre><code class="lang-bash">void Engine::InGameScreen::MoveLayer(vector&lt;Sprite*&gt;&amp; bg, float speed)
+{
+    <span class="hljs-keyword">for</span> (Sprite* s5 : bg) {
+        <span class="hljs-function"><span class="hljs-title">if</span> (s5-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etPosition</span>().x &lt; -game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span>screenWidth + offset) {
+            <span class="hljs-function"><span class="hljs-title">s5</span>-&gt;</span>S<span class="hljs-function"><span class="hljs-title">etPosition</span>(game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span>screenWidth + offset - <span class="hljs-number">1</span>, <span class="hljs-number">0</span>);
+        }
+        <span class="hljs-function"><span class="hljs-title">s5</span>-&gt;</span>S<span class="hljs-function"><span class="hljs-title">etPosition</span>(s5-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etPosition</span>().x - speed * game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etGameTime</span>(), s5-&gt;</span>GetPosition().y);
+        <span class="hljs-function"><span class="hljs-title">s5</span>-&gt;</span>U<span class="hljs-function"><span class="hljs-title">pdate</span>(game-&gt;</span>GetGameTime());
+    }
+}
+
+void Engine::InGameScreen::DrawLayer(vector&lt;Sprite*&gt;&amp; bg)
+{
+    <span class="hljs-keyword">for</span> (Sprite* s5 : bg) {
+        <span class="hljs-function"><span class="hljs-title">s5</span>-&gt;</span>Draw();
+    }
+}
+
+void Engine::InGameScreen::AddToLayer(vector&lt;Sprite*&gt;&amp; bg, string <span class="hljs-keyword">name</span>)
+{
+    Texture* Ptexture = new Texture(<span class="hljs-keyword">name</span>);
+
+    S<span class="hljs-function"><span class="hljs-title">prite</span>* s5 = new Sprite(Ptexture, game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etDefaultSpriteShader</span>(), game-&gt;</span>GetDefaultQuad());
+    <span class="hljs-function"><span class="hljs-title">s5</span>-&gt;</span>S<span class="hljs-function"><span class="hljs-title">etSize</span>(game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span><span class="hljs-function"><span class="hljs-title">screenWidth</span> + offset, game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span>screenHeight);
+    bg.push_back(s5);
+
+    S<span class="hljs-function"><span class="hljs-title">prite</span>* s2 = new Sprite(Ptexture, game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etDefaultSpriteShader</span>(), game-&gt;</span>GetDefaultQuad());
+    <span class="hljs-function"><span class="hljs-title">s2</span>-&gt;</span>S<span class="hljs-function"><span class="hljs-title">etSize</span>(game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span><span class="hljs-function"><span class="hljs-title">screenWidth</span> + offset, game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span><span class="hljs-function"><span class="hljs-title">screenHeight</span>)-&gt;</span>S<span class="hljs-function"><span class="hljs-title">etPosition</span>(game-&gt;</span>G<span class="hljs-function"><span class="hljs-title">etSettings</span>()-&gt;</span>screenWidth + offset - <span class="hljs-number">1</span>, <span class="hljs-number">0</span>);
+    bg.push_back(s2);
+}
+</code></pre>
+<h3 id="9-restart-game">9. Restart game</h3>
+<p>Pada tahap ini kita mengimplementasikan GAME_State yaitu mengatur ulang posisi platform, sprite, score, dan menggerakan kembali parallax scrolling (background). </p>
+<pre><code class="lang-bash">void Engine::InGameScreen::restartGame()
+{
+    sprite-&gt;SetPosition(<span class="hljs-number">50</span>, <span class="hljs-number">100</span>);
+
+    <span class="hljs-comment">// Reset platform positions to their original state</span>
+    vec2 start = vec2(<span class="hljs-number">2000</span>, <span class="hljs-number">195</span>);  <span class="hljs-comment">// Starting position for platforms</span>
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; platforms.size(); i++) {
+        platforms[i]-&gt;SetPosition(start.x + i * <span class="hljs-number">1000</span>, start.y + i);
+    }
+
+    <span class="hljs-comment">//reset other game variables </span>
+    score = <span class="hljs-number">0</span>;
+    text2-&gt;SetText(<span class="hljs-string">" "</span>)-&gt;SetPosition(<span class="hljs-number">400</span>, <span class="hljs-number">450</span>);
+
+    MoveLayer(backgrounds, <span class="hljs-number">0.005</span>f);
+    MoveLayer(middlegrounds, <span class="hljs-number">0.03</span>f);
+    MoveLayer(foregrounds, <span class="hljs-number">0.5</span>f);
+    MoveLayer(front, <span class="hljs-number">0.7</span>f);
+}
+</code></pre>
+<p>Fitur-fitur diatas adalah fitur umum yang dapat kita temukan pada game endless running terutama pada game Dino Run yang dikembangkan oleh Google. Dari penerapan fitur-fitur tersebut kita dapa mengembangkan game dengan konsep yang sama, namun terdapat modifikasi yang berbeda dari segi penggunaan <strong>Asset</strong> dan penambahan fitur <strong>Screen</strong>.</p>
+
+</div>
+
+</body>
+</html>
